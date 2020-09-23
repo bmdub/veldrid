@@ -863,6 +863,52 @@ namespace Veldrid
             uint sizeInBytes);
 
         /// <summary>
+        /// Update the values of push constants.
+        /// </summary>
+        /// <typeparam name="T">The type of data to add to the command buffer.</typeparam>
+        /// <param name="stages">The <see cref="ShaderStages"/> in which this element is used.</param>
+        /// <param name="source">A reference to the single value to upload.</param>
+        public unsafe void UpdatePushConstants<T>(
+            ShaderStages stages,
+            ref T source) where T : struct
+        {
+            const int maxSize = 128;
+
+#if VALIDATE_USAGE
+            if (_graphicsPipeline == null)
+            {
+                throw new VeldridException($"A graphics Pipeline must be active before {nameof(UpdatePushConstants)} can be called.");
+            }
+#endif
+
+            var sizeInBytes = (uint)Unsafe.SizeOf<T>();
+            if (sizeInBytes > 128)
+            {
+                throw new VeldridException(
+                    $"The size of the specified value ({sizeInBytes}) is larger than the maximum ({maxSize}).");
+            }
+            if (sizeInBytes == 0)
+            {
+                return;
+            }
+
+            ref byte sourceByteRef = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref source));
+            fixed (byte* ptr = &sourceByteRef)
+            {
+                UpdatePushConstantsCore(stages, 0, (IntPtr)ptr, sizeInBytes);
+            }
+        }
+
+        private protected virtual void UpdatePushConstantsCore(
+            ShaderStages stages,
+            uint bufferOffsetInBytes,
+            IntPtr source,
+            uint sizeInBytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Copies a region from the source <see cref="DeviceBuffer"/> to another region in the destination <see cref="DeviceBuffer"/>.
         /// </summary>
         /// <param name="source">The source <see cref="DeviceBuffer"/> from which data will be copied.</param>

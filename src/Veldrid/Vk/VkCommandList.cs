@@ -733,6 +733,12 @@ namespace Veldrid.Vk
             CopyBuffer(stagingBuffer, 0, buffer, bufferOffsetInBytes, sizeInBytes);
         }
 
+        private protected override void UpdatePushConstantsCore(ShaderStages stages, uint bufferOffsetInBytes, IntPtr source, uint sizeInBytes)
+        {
+            var vkStages = VkFormats.VdToVkShaderStages(stages);
+            vkCmdPushConstants(_cb, _currentGraphicsPipeline.PipelineLayout, vkStages, bufferOffsetInBytes, sizeInBytes, source.ToPointer());
+        }
+
         protected override void CopyBufferCore(
             DeviceBuffer source,
             uint sourceOffset,
